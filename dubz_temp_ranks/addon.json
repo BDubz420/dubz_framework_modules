@@ -1,0 +1,6 @@
+{
+  "title": "Dubz Temp Ranks",
+  "type": "servercontent",
+  "tags": ["roleplay"],
+  "ignore": ["*.psd", "*.blend", ".git/*"]
+}
