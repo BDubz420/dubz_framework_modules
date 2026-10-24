@@ -1,0 +1,2 @@
+-- Superseded by lua/autorun/blackout_hud.lua and lua/blackout_hud/*.lua.
+-- Kept empty on purpose so copying this addon over the old one replaces the old HUD code.
