@@ -1,0 +1,6 @@
+{
+    "title": "Dubz Visible Guns",
+    "type": "servercontent",
+    "tags": ["roleplay", "realism"],
+    "ignore": ["*.psd", "*.vcproj", "*.svn*"]
+}
