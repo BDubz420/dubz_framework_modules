@@ -1,0 +1,6 @@
+{
+  "title": "Dubz F4 Menu",
+  "type": "servercontent",
+  "tags": ["roleplay"],
+  "ignore": ["*.psd", "*.blend", ".git/*"]
+}
