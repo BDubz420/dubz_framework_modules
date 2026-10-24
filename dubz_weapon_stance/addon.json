@@ -1,0 +1,6 @@
+{
+    "title": "Dubz Weapon Stance",
+    "type": "servercontent",
+    "tags": ["roleplay", "realism"],
+    "ignore": ["*.psd", "*.vcproj", "*.svn*"]
+}
