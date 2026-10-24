@@ -1,0 +1,6 @@
+{
+  "title": "Dubz Workflow",
+  "type": "servercontent",
+  "tags": ["roleplay"],
+  "ignore": ["*.psd", "*.blend", ".git/*", "PLAN.md"]
+}
