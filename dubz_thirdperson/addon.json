@@ -1,0 +1,6 @@
+{
+    "title": "Dubz Third Person",
+    "type": "servercontent",
+    "tags": ["fun", "roleplay"],
+    "ignore": ["*.psd", "*.vcproj", "*.svn*"]
+}
