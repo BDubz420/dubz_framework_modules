@@ -1,0 +1,6 @@
+{
+  "title": "Dubz NPC Life",
+  "type": "servercontent",
+  "tags": ["roleplay"],
+  "ignore": ["*.psd", "*.blend", ".git/*"]
+}
