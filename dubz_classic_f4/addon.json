@@ -1,0 +1,6 @@
+{
+  "title": "Dubz Classic F4",
+  "type": "servercontent",
+  "tags": ["roleplay"],
+  "ignore": ["*.psd", "*.blend", ".git/*"]
+}
