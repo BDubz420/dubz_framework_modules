@@ -1,0 +1,6 @@
+{
+  "title": "Dubz Shops",
+  "type": "servercontent",
+  "tags": ["roleplay"],
+  "ignore": ["*.psd", "*.blend", ".git/*"]
+}
