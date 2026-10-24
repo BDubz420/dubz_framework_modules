@@ -1,0 +1,6 @@
+{
+  "title": "Dubz DarkRP Management",
+  "type": "servercontent",
+  "tags": ["roleplay"],
+  "ignore": ["*.psd", "*.blend", ".git/*", "PLAN.md"]
+}
