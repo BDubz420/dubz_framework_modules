@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+    "$basetexture" "dubz_mining/pickaxe01"
+    "$surfaceprop" "metal"
+}
