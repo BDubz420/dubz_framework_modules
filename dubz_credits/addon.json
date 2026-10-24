@@ -1,0 +1,6 @@
+{
+  "title": "Dubz Credits",
+  "type": "servercontent",
+  "tags": ["roleplay"],
+  "ignore": ["*.psd", "*.blend", ".git/*"]
+}
