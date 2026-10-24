@@ -1,0 +1,6 @@
+{
+  "title": "Dubz No Sprays",
+  "type": "servercontent",
+  "tags": ["roleplay"],
+  "ignore": ["*.psd", "*.blend", ".git/*"]
+}
