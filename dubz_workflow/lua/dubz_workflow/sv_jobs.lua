@@ -23,7 +23,7 @@ end
 local function starterInstructions(job)
     local lines = {"# Goal", phrase("JobTaskGoal", {name = job.name}), "# Steps"}
 
-    for index, step in ipairs(config.JobTaskSteps) do lines[#lines + 1] = index .. ". " .. step end
+    for index, step in ipairs(DubzWorkflow.List("job_task_steps")) do lines[#lines + 1] = index .. ". " .. step end
 
     return table.concat(lines, "\n")
 end
@@ -34,7 +34,7 @@ local function createTask(ply, job)
         summary = phrase("JobTaskSummary", {name = job.name}),
         priority = config.DefaultPriority,
         instructions = starterInstructions(job),
-        checklist = table.Copy(config.JobTaskSteps),
+        checklist = DubzWorkflow.List("job_task_steps"),
         links = {{type = LINK_TYPE, ref = job.id}},
         tags = {"job"}
     })
@@ -42,6 +42,7 @@ local function createTask(ply, job)
     if not ok then return false, message end
 
     Sync.Task(task)
+    Logic.Link(job.id, task.id)
 
     return true, phrase("JobTaskCreated", {name = job.name})
 end
@@ -55,7 +56,7 @@ DFW.Net.Receive("wf_jobset", function(_, ply)
 
     if not (istable(request) and isstring(request.id) and isstring(request.status) and allowed(ply)) then return end
 
-    local ok, message = Logic.Set(ply, request.id, request.status)
+    local ok, message = Logic.Set(ply, request.id, request.status, request.note, request.task)
 
     Sync.Result(ply, ok, message)
 end, {maxBits = JSON_BITS, cooldown = ACTION_COOLDOWN})

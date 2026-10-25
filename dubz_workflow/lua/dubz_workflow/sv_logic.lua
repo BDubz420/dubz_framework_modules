@@ -18,14 +18,18 @@ local function load()
     map = {}
 
     for _, row in ipairs(istable(saved.jobs) and saved.jobs or {}) do
-        if isstring(row.id) and isstring(row.st) then map[row.id] = {st = row.st, by = row.by or "", at = row.at or 0} end
+        if isstring(row.id) and isstring(row.st) then
+            map[row.id] = {st = row.st, by = row.by or "", at = row.at or 0, note = row.note or "", task = row.task}
+        end
     end
 end
 
 function Logic.SaveNow()
     local rows = {}
 
-    for id, entry in pairs(map) do rows[#rows + 1] = {id = id, st = entry.st, by = entry.by, at = entry.at} end
+    for id, entry in pairs(map) do
+        rows[#rows + 1] = {id = id, st = entry.st, by = entry.by, at = entry.at, note = entry.note, task = entry.task}
+    end
 
     local ok, reason = DFW.Data.WriteJSON(DATA_FILE, {version = VERSION, jobs = rows})
 
@@ -37,7 +41,7 @@ local function save()
 end
 
 function Logic.ValidStatus(status)
-    for _, entry in ipairs(config.LogicStatuses) do
+    for _, entry in ipairs(DubzWorkflow.List("logic_statuses")) do
         if entry == status then return true end
     end
 
@@ -49,7 +53,15 @@ function Logic.Status(id)
 
     if entry and Logic.ValidStatus(entry.st) then return entry.st end
 
-    return config.LogicStatuses[1] or ""
+    return DubzWorkflow.List("logic_statuses")[1] or ""
+end
+
+function Logic.Model(job)
+    local model = job.model
+
+    if istable(model) then model = model[1] end
+
+    return isstring(model) and model or nil
 end
 
 function Logic.Jobs()
@@ -65,7 +77,10 @@ function Logic.Jobs()
                 id = row.id,
                 name = row.job.name,
                 color = color and {r = color.r, g = color.g, b = color.b} or nil,
-                status = Logic.Status(row.id)
+                status = Logic.Status(row.id),
+                note = map[row.id] and map[row.id].note or "",
+                task = map[row.id] and map[row.id].task or nil,
+                model = Logic.Model(row.job)
             }
         end
     end
@@ -80,7 +95,7 @@ function Logic.Find(id)
 end
 
 local function payload()
-    return {statuses = config.LogicStatuses, jobs = Logic.Jobs()}
+    return {statuses = DubzWorkflow.List("logic_statuses"), jobs = Logic.Jobs()}
 end
 
 function Logic.Send(ply)
@@ -98,12 +113,28 @@ local function broadcast()
     if #targets > 0 then Sync.Send("wf_jobs", payload(), targets) end
 end
 
-function Logic.Set(ply, id, status)
+function Logic.Link(id, taskId)
+    if not Logic.Find(id) then return end
+
+    local entry = map[id] or {st = Logic.Status(id), by = "", at = os.time(), note = ""}
+
+    entry.task = taskId
+    map[id] = entry
+    save()
+    broadcast()
+end
+
+function Logic.Set(ply, id, status, note, taskId)
     if not Logic.Find(id) then return false, DubzWorkflow.Phrase("ErrorJob") end
 
     if not Logic.ValidStatus(status) then return false, DubzWorkflow.Phrase("ErrorLogicStatus") end
 
-    map[id] = {st = status, by = ply:Nick(), at = os.time()}
+    local linked = isstring(taskId) and DubzWorkflow.Store.Get(taskId) and taskId or nil
+
+    map[id] = {
+        st = status, by = ply:Nick(), at = os.time(),
+        note = string.sub(string.Trim(tostring(note or "")), 1, DubzWorkflow.Config.NoteMax), task = linked
+    }
     save()
     broadcast()
     hook.Run("DubzWorkflowJobLogicChanged", id, status)

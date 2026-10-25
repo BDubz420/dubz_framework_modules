@@ -79,7 +79,7 @@ local function schedule(scroll, task)
     heading(scroll, phrase("SectionSchedule"))
 
     for _, entry in ipairs(task.schedule) do
-        local times = entry.from and (entry.from .. (entry.to and ("-" .. entry.to) or "")) or ""
+        local times = entry.from and (entry.to and DubzWorkflow.Dates.Range(entry.from, entry.to) or DubzWorkflow.Dates.Clock(entry.from)) or ""
 
         line(scroll, entry.date .. (times ~= "" and ("  " .. times) or ""), "body")
     end

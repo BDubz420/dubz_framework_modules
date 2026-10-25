@@ -21,9 +21,9 @@ function Staff.IsStaff(ply)
 
     if custom ~= nil then return custom == true end
 
-    if listed(config.StaffSteamIDs, ply:SteamID64()) then return true end
+    if listed(DubzWorkflow.List("staff_steamids"), ply:SteamID64()) then return true end
 
-    if config.StaffMode == "ranks" then return listed(config.StaffRanks, ply:GetUserGroup()) end
+    if config.StaffMode == "ranks" then return listed(DubzWorkflow.List("staff_ranks"), ply:GetUserGroup()) end
 
     return ply:IsAdmin()
 end
@@ -31,7 +31,7 @@ end
 function Staff.IsManager(ply)
     if not Staff.IsStaff(ply) then return false end
 
-    return ply:IsSuperAdmin() or listed(config.ManagerRanks, ply:GetUserGroup())
+    return ply:IsSuperAdmin() or listed(DubzWorkflow.List("manager_ranks"), ply:GetUserGroup())
 end
 
 function Staff.Working(ply)

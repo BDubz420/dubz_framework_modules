@@ -124,7 +124,7 @@ local function cleanSchedule(list)
 end
 
 local function priorityOf(value)
-    for _, entry in ipairs(config.Priorities) do
+    for _, entry in ipairs(DubzWorkflow.List("priorities")) do
         if entry == value then return value end
     end
 
@@ -141,6 +141,8 @@ local function apply(task, data)
     task.instructions = clean(data.instructions, config.InstructionsMax)
     task.checklist = cleanChecklist(data.checklist, task.checklist)
     task.links = cleanLinks(data.links)
+
+    if data.schedule ~= nil then task.schedule = cleanSchedule(data.schedule) end
 
     local hex = string.lower(clean(data.color, 7))
 

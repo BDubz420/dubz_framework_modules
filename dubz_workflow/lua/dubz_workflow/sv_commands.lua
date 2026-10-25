@@ -6,7 +6,7 @@ local Sync = DubzWorkflow.Sync
 local function commandSet()
     local set = {}
 
-    for _, command in ipairs(config.ChatCommands) do set[string.lower(command)] = true end
+    for _, command in ipairs(DubzWorkflow.List("chat_commands")) do set[string.lower(command)] = true end
 
     return set
 end

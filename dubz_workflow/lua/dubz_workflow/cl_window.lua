@@ -17,12 +17,14 @@ local function phrase(key, values)
     return DubzWorkflow.Phrase(key, values)
 end
 
+local twelveHour = DubzWorkflow.Dates.TwelveHour
+
 local function serverTime()
     local base = State.Settings.serverTime
 
     if not base then return nil end
 
-    return os.date("%H:%M", base + math.floor(CurTime() - (State.Settings.receivedAt or CurTime())))
+    return twelveHour(base + math.floor(CurTime() - (State.Settings.receivedAt or CurTime())), false)
 end
 
 local function buildClock(bar)
@@ -34,7 +36,7 @@ local function buildClock(bar)
         local theme = DFW.UI.GetTheme()
         local server = serverTime()
 
-        DFW.Draw.Text(os.date("%H:%M:%S"), "BodyBold", w, server and h * 0.3 or h * 0.38, theme.text, TEXT_ALIGN_RIGHT)
+        DFW.Draw.Text(twelveHour(os.time(), true), "BodyBold", w, server and h * 0.3 or h * 0.38, theme.text, TEXT_ALIGN_RIGHT)
         DFW.Draw.Text(os.date("%a %d %b %Y"), "Tiny", w, server and h * 0.58 or h * 0.72, theme.textMuted, TEXT_ALIGN_RIGHT)
 
         if server then DFW.Draw.Text(phrase("ServerTime", {time = server}), "Tiny", w, h * 0.86, theme.textDim, TEXT_ALIGN_RIGHT) end
@@ -74,6 +76,7 @@ local function buildTeam(bar)
 
     label:Dock(RIGHT)
     label:SetWide(TEAM_WIDTH)
+    label:DockMargin(0, 0, GAP, 0)
     label:SetStyle("small")
     label:SetAlign(TEXT_ALIGN_RIGHT)
 
@@ -110,8 +113,7 @@ local function buildTabs(bar, body, startTab)
     local tabs = vgui.Create("DFW.TabBar", bar)
     local active
 
-    tabs:Dock(FILL)
-    tabs.OnTabChanged = function(_, id)
+    local function show(id)
         if active == id then return end
 
         active = id
@@ -128,6 +130,9 @@ local function buildTabs(bar, body, startTab)
         end
     end
 
+    tabs:Dock(FILL)
+    tabs.OnTabChanged = function(_, id) show(id) end
+
     tabs:AddTab("board", phrase("TabBoard"))
     tabs:AddTab("mine", phrase("TabMine"))
     tabs:AddTab("calendar", phrase("TabCalendar"))
@@ -138,7 +143,8 @@ local function buildTabs(bar, body, startTab)
 
     if State.Me.manager then tabs:AddTab("review", phrase("TabReview")) end
 
-    tabs:SetActive(startTab or "board")
+    tabs:SetActive(startTab or "board", true)
+    show(startTab or "board")
 
     return tabs
 end

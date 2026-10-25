@@ -44,7 +44,7 @@ function Sync.State(ply)
         me = Sync.Me(ply),
         team = Staff.Online(),
         settings = {
-            priorities = config.Priorities,
+            priorities = DubzWorkflow.List("priorities"),
             serverTime = config.ShowServerTime and os.time() or nil
         }
     }, ply)

@@ -20,7 +20,7 @@ local function fit(text, font, limit)
 end
 
 function Card.PriorityRank(priority)
-    for index, entry in ipairs(config.Priorities) do
+    for index, entry in ipairs(DubzWorkflow.List("priorities")) do
         if entry == priority then return index end
     end
 
@@ -29,7 +29,7 @@ end
 
 local function priorityColor(theme, priority)
     local rank = Card.PriorityRank(priority)
-    local top = #config.Priorities
+    local top = #DubzWorkflow.List("priorities")
 
     if rank >= top and top > 1 then return theme.danger or theme.accent end
 

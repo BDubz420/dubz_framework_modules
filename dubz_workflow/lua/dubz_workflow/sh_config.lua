@@ -1,18 +1,13 @@
 DubzWorkflow.Config = {
-    ChatCommands = {"!workflow", "/workflow", "!tasks", "/tasks"},
     ConsoleCommand = "dubz_workflow",
 
     StaffMode = "admin",
-    StaffRanks = {},
-    StaffSteamIDs = {},
-    ManagerRanks = {},
 
     DefaultWorking = true,
     JoinPopupDelay = 8,
     ReminderMinutes = 20,
     ShowServerTime = false,
 
-    Priorities = {"low", "normal", "high", "urgent"},
     DefaultPriority = "normal",
     TitleMax = 80,
     SummaryMax = 200,
@@ -23,15 +18,13 @@ DubzWorkflow.Config = {
     HistoryMax = 40,
     LinkMax = 6,
 
-    LogicStatuses = {"Undefined", "Needs logic", "In progress", "Defined", "Completed"},
-    JobTaskSteps = {"Decide what this job can and cannot do.", "Write the logic for it.", "Test it in game."},
-    Palette = {"Red=#e5484d", "Orange=#f76b15", "Yellow=#ffc53d", "Green=#30a46c", "Blue=#3e63dd", "Purple=#8e4ec6", "Pink=#d6409f"},
     ScheduleMax = 31,
+    TimeMinuteStep = 5,
     ConvertSetsPlanned = true,
     SuggestionDialogWidth = 640,
     SuggestionDialogHeight = 560,
-    JobDialogWidth = 460,
-    JobDialogHeight = 300,
+    JobDialogWidth = 720,
+    JobDialogHeight = 480,
 
     WindowWidth = 1320,
     WindowHeight = 760,
@@ -136,6 +129,10 @@ DubzWorkflow.Config = {
         LinkNeedsTarget = "Pick what to link to first.",
         JobsNoDarkRP = "DarkRP is not loaded, so there are no jobs to track.",
         JobDialogTitle = "Job logic",
+        JobNote = "What this job still needs",
+        JobNotePlaceholder = "Describe what the job logic needs, or what is already done.",
+        JobLinkedTask = "Linked task",
+        JobNoTask = "No linked task",
         JobStatus = "Logic status",
         JobCreateTask = "Create task",
         JobTaskTitle = "Define logic: {name}",
@@ -147,6 +144,25 @@ DubzWorkflow.Config = {
         ErrorLogicStatus = "That logic status is not valid.",
         FieldColor = "Colour (optional)",
         ColorNone = "No colour",
+        PickerTimes = "Choose times",
+        PickerDays = "Pick days",
+        PickerDate = "Pick a date",
+        TimeFrom = "From",
+        TimeTo = "To",
+        TimeNotSet = "Not set",
+        TimesButton = "Times",
+        TimesNone = "Any time",
+        Done = "Done",
+        ClearAll = "Clear",
+        FieldSchedule = "Scheduled days",
+        PickDays = "Pick days",
+        PickDate = "Pick date",
+        NoDate = "No date",
+        NoDays = "No days picked",
+        SortPriority = "Priority, highest first",
+        SortNewest = "Newest first",
+        SortDue = "Due date",
+        FilterAll = "All priorities",
         TabCalendar = "Calendar",
         CalToday = "Today",
         CalMonth = "Month",
@@ -195,16 +211,52 @@ function DubzWorkflow.Phrase(key, values)
     return text
 end
 
-function DubzWorkflow.PaletteList()
+DubzWorkflow.Lists = {
+    chat_commands = {"!workflow", "/workflow", "!tasks", "/tasks"},
+    staff_ranks = {},
+    staff_steamids = {},
+    manager_ranks = {},
+    priorities = {"low", "normal", "high", "urgent"},
+    logic_statuses = {"Undefined", "Needs logic", "In progress", "Defined", "Completed"},
+    job_task_steps = {"Decide what this job can and cannot do.", "Write the logic for it.", "Test it in game."}
+}
+
+DubzWorkflow.PaletteDefault = {
+    {name = "Red", hex = "#e5484d"},
+    {name = "Orange", hex = "#f76b15"},
+    {name = "Yellow", hex = "#ffc53d"},
+    {name = "Green", hex = "#30a46c"},
+    {name = "Blue", hex = "#3e63dd"},
+    {name = "Purple", hex = "#8e4ec6"},
+    {name = "Pink", hex = "#d6409f"}
+}
+
+function DubzWorkflow.List(id, lower)
+    local module = DFW and DFW.Collections
+
+    if module and module.GetDefinition("workflow", id) then
+        return module.ListFromRows(module.Get("workflow", id), "value", lower)
+    end
+
     local list = {}
 
-    for _, entry in ipairs(DubzWorkflow.Config.Palette) do
-        local name, red, green, blue = string.match(entry, "^(.-)=#(%x%x)(%x%x)(%x%x)$")
+    for _, value in ipairs(DubzWorkflow.Lists[id] or {}) do list[#list + 1] = lower and string.lower(value) or value end
 
-        if name then
+    return list
+end
+
+function DubzWorkflow.PaletteList()
+    local module = DFW and DFW.Collections
+    local rows = module and module.GetDefinition("workflow", "palette") and module.Get("workflow", "palette") or DubzWorkflow.PaletteDefault
+    local list = {}
+
+    for _, row in ipairs(rows) do
+        local red, green, blue = string.match(tostring(row.hex), "^#(%x%x)(%x%x)(%x%x)$")
+
+        if red and tostring(row.name) ~= "" then
             list[#list + 1] = {
-                name = name,
-                hex = string.lower(string.sub(entry, #name + 2)),
+                name = row.name,
+                hex = string.lower(row.hex),
                 color = Color(tonumber(red, 16), tonumber(green, 16), tonumber(blue, 16))
             }
         end

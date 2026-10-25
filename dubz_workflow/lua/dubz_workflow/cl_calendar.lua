@@ -4,7 +4,8 @@ local Calendar = DubzWorkflow.Calendar
 local State = DubzWorkflow.State
 local Client = DubzWorkflow.Client
 local Card = DubzWorkflow.Card
-local DAY = 86400
+local Dates = DubzWorkflow.Dates
+local DAY = Dates.DAY
 local NOON = 12
 local COLUMNS = 7
 local MONTH_ROWS = 6
@@ -19,35 +20,8 @@ local function phrase(key, values)
     return DubzWorkflow.Phrase(key, values)
 end
 
-local function stampOf(date)
-    local year, month, day = string.match(date, "^(%d+)-(%d+)-(%d+)$")
-
-    return os.time({year = tonumber(year), month = tonumber(month), day = tonumber(day), hour = NOON})
-end
-
-local function dateOf(time)
-    return os.date("%Y-%m-%d", time)
-end
-
-local function addDays(time, count)
-    return time + count * DAY
-end
-
-local function mondayOf(time)
-    return addDays(time, -((os.date("*t", time).wday + 5) % 7))
-end
-
-local function monthStart(time)
-    local parts = os.date("*t", time)
-
-    return os.time({year = parts.year, month = parts.month, day = 1, hour = NOON})
-end
-
-local function shiftMonth(time, amount)
-    local parts = os.date("*t", time)
-
-    return os.time({year = parts.year, month = parts.month + amount, day = 1, hour = NOON})
-end
+local stampOf, dateOf, addDays = Dates.Stamp, Dates.Date, Dates.AddDays
+local mondayOf, monthStart, shiftMonth = Dates.Monday, Dates.MonthStart, Dates.ShiftMonth
 
 local function involved(task)
     local me = State.Me.s
@@ -67,12 +41,6 @@ local function eligible(task)
     return State.Me.manager or involved(task)
 end
 
-local function validTime(value)
-    local hour, minute = string.match(value, "^(%d%d):(%d%d)$")
-
-    return hour ~= nil and tonumber(hour) < 24 and tonumber(minute) < 60
-end
-
 local function indexOf(list, date)
     for index, entry in ipairs(list) do
         if entry.date == date then return index end
@@ -80,9 +48,7 @@ local function indexOf(list, date)
 end
 
 local function newEntry(view, date)
-    local from, to = string.Trim(view.from:GetValue()), string.Trim(view.to:GetValue())
-
-    return {date = date, from = validTime(from) and from or nil, to = validTime(to) and to or nil}
+    return {date = date, from = view.fromValue ~= "" and view.fromValue or nil, to = view.toValue ~= "" and view.toValue or nil}
 end
 
 local function toggleDate(view, date)
@@ -128,7 +94,7 @@ local function scheduleMap()
 end
 
 local function chipText(item, week)
-    if week and item.entry.from then return item.entry.from .. " " .. item.task.title end
+    if week and item.entry.from then return Dates.Clock(item.entry.from) .. " " .. item.task.title end
 
     return item.task.title
 end
@@ -264,15 +230,27 @@ local function navButton(bar, text, width, onClick)
     return button
 end
 
-local function timeEntry(bar, placeholder)
-    local entry = vgui.Create("DFW.TextEntry", bar)
+local function timesLabel(view)
+    local range = Dates.Range(view.fromValue ~= "" and view.fromValue or nil, view.toValue ~= "" and view.toValue or nil)
 
-    entry:Dock(RIGHT)
-    entry:SetWide(110)
-    entry:DockMargin(6, 0, 0, 0)
-    entry:SetPlaceholder(placeholder)
+    return phrase("TimesButton") .. ": " .. (range ~= "" and range or phrase("TimesNone"))
+end
 
-    return entry
+local function timesButton(bar, view)
+    local button = vgui.Create("DFW.Button", bar)
+
+    button:Dock(RIGHT)
+    button:SetWide(230)
+    button:DockMargin(6, 0, 0, 0)
+    button:SetLabel(timesLabel(view))
+    button.DoClick = function()
+        DubzWorkflow.Pickers.Times(view.fromValue, view.toValue, function(from, to)
+            view.fromValue, view.toValue = from, to
+            button:SetLabel(timesLabel(view))
+        end)
+    end
+
+    return button
 end
 
 local function fillPick(view)
@@ -297,7 +275,7 @@ end
 
 function Calendar.Build(parent)
     local root = vgui.Create("Panel", parent)
-    local view = {mode = "month", anchor = monthStart(os.time())}
+    local view = {mode = "month", anchor = monthStart(os.time()), fromValue = "", toValue = ""}
     local bar = vgui.Create("Panel", root)
 
     root:Dock(FILL)
@@ -315,8 +293,7 @@ function Calendar.Build(parent)
         view.anchor = view.mode == "month" and monthStart(view.anchor) or addDays(view.start, 3)
         recompute(view)
     end
-    view.to = timeEntry(bar, phrase("CalTo"))
-    view.from = timeEntry(bar, phrase("CalFrom"))
+    timesButton(bar, view)
     view.pickBox = vgui.Create("DFW.Dropdown", bar)
     view.pickBox:Dock(RIGHT)
     view.pickBox:SetWide(240)

@@ -259,6 +259,105 @@ local function linkField(scroll, list)
     refresh()
 end
 
+local function dateField(scroll, label, value)
+    local holder = row(scroll, LABEL_HEIGHT + FIELD_HEIGHT)
+
+    caption(holder, label)
+
+    local bar = vgui.Create("Panel", holder)
+    local pick = vgui.Create("DFW.Button", bar)
+    local entry = vgui.Create("DFW.TextEntry", bar)
+
+    bar:Dock(TOP)
+    bar:SetTall(FIELD_HEIGHT)
+    pick:Dock(RIGHT)
+    pick:SetWide(130)
+    pick:DockMargin(6, 0, 0, 0)
+    pick:SetLabel(phrase("PickDate"))
+    pick:SetIcon("actions/add")
+    entry:Dock(FILL)
+    entry:SetPlaceholder(phrase("NoDate"))
+    entry:SetUpdateOnType(true)
+    entry:SetValue(value or "")
+    pick.DoClick = function()
+        DubzWorkflow.Pickers.Dates({
+            title = phrase("PickerDate"),
+            selected = entry:GetValue(),
+            onDone = function(date) entry:SetValue(date) end
+        })
+    end
+
+    return entry
+end
+
+local function scheduleSummary(list)
+    if #list == 0 then return phrase("NoDays") end
+
+    local parts = {}
+
+    for index = 1, math.min(#list, 4) do
+        local range = DubzWorkflow.Dates.Range(list[index].from, list[index].to)
+
+        parts[#parts + 1] = list[index].date .. (range ~= "" and (" " .. range) or "")
+    end
+
+    return table.concat(parts, ", ") .. (#list > 4 and (" +" .. (#list - 4)) or "")
+end
+
+local function scheduleField(scroll, list)
+    local holder = row(scroll, LABEL_HEIGHT * 2 + FIELD_HEIGHT)
+    local summary
+
+    caption(holder, phrase("FieldSchedule"))
+    summary = vgui.Create("DFW.Label", holder)
+    summary:Dock(TOP)
+    summary:SetTall(LABEL_HEIGHT)
+    summary:SetStyle("body")
+
+    local function refresh() summary:SetText(scheduleSummary(list)) end
+
+    local bar = vgui.Create("Panel", holder)
+
+    bar:Dock(TOP)
+    bar:SetTall(FIELD_HEIGHT)
+
+    local pick = vgui.Create("DFW.Button", bar)
+
+    pick:Dock(LEFT)
+    pick:SetWide(150)
+    pick:DockMargin(0, 0, 6, 0)
+    pick:SetLabel(phrase("PickDays"))
+    pick:SetIcon("actions/add")
+    pick:SetVariant("primary")
+    pick.DoClick = function()
+        DubzWorkflow.Pickers.Dates({
+            multi = true,
+            title = phrase("PickerDays"),
+            selected = list,
+            onDone = function(chosen)
+                table.Empty(list)
+
+                for _, entry in ipairs(chosen) do list[#list + 1] = entry end
+
+                refresh()
+            end
+        })
+    end
+
+    local clear = vgui.Create("DFW.Button", bar)
+
+    clear:Dock(LEFT)
+    clear:SetWide(100)
+    clear:SetLabel(phrase("ClearAll"))
+    clear:SetVariant("ghost")
+    clear.DoClick = function()
+        table.Empty(list)
+        refresh()
+    end
+
+    refresh()
+end
+
 local function collectTags(text)
     local tags = {}
 
@@ -294,7 +393,7 @@ end
 local function priorityChoices()
     local list = {}
 
-    for _, entry in ipairs(config.Priorities) do list[#list + 1] = {label = entry, data = entry} end
+    for _, entry in ipairs(DubzWorkflow.List("priorities")) do list[#list + 1] = {label = entry, data = entry} end
 
     return list
 end
@@ -326,6 +425,7 @@ function DubzWorkflow.OpenEditor(id)
     local manager = State.Me.manager
     local assignees = table.Copy(task and task.assignees or {})
     local links = table.Copy(task and task.links or {})
+    local schedule = table.Copy(task and task.schedule or {})
     local bar = vgui.Create("Panel", content)
 
     bar:Dock(BOTTOM)
@@ -346,10 +446,11 @@ function DubzWorkflow.OpenEditor(id)
     end
 
     local color = choiceField(scroll, phrase("FieldColor"), colorChoices(), task and task.color or "")
-    local due = textField(scroll, phrase("FieldDue"), task and task.due)
+    local due = dateField(scroll, phrase("FieldDue"), task and task.due)
     local tags = textField(scroll, phrase("FieldTags"), task and table.concat(task.tags or {}, ", "))
 
     assigneeField(scroll, assignees)
+    scheduleField(scroll, schedule)
     linkField(scroll, links)
 
     local instructions = textField(scroll, phrase("FieldInstructions") .. "  (" .. phrase("InstructionsHint") .. ")", task and task.instructions, BODY_HEIGHT, true)
@@ -383,6 +484,7 @@ function DubzWorkflow.OpenEditor(id)
             tags = collectTags(tags:GetValue()),
             assignees = assignees,
             links = links,
+            schedule = schedule,
             instructions = instructions:GetValue(),
             checklist = collectLines(checklist:GetValue())
         })

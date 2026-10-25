@@ -1,14 +1,12 @@
 local config = DubzWorkflow.Config
 
+local function listColumn(label, maxLength)
+    return {key = "value", label = label, type = "string", width = 1, maxLength = maxLength}
+end
+
 local specs = {
     {path = "StaffMode", label = "Who Counts As Staff", choices = {"admin", "ranks"}, group = "Staff", public = false,
         description = "admin: every admin and superadmin. ranks: only the usergroups and SteamIDs listed below."},
-    {path = "StaffRanks", label = "Staff Usergroups", list = true, group = "Staff", maxLength = 40, public = false,
-        description = "Used when staff mode is ranks. Works with SAM, ULX and xAdmin usergroups."},
-    {path = "StaffSteamIDs", label = "Extra Staff SteamID64s", list = true, group = "Staff", maxLength = 24, public = false,
-        description = "Always counted as staff, whatever their usergroup."},
-    {path = "ManagerRanks", label = "Manager Usergroups", list = true, group = "Staff", maxLength = 40, public = false,
-        description = "Managers create, edit, assign and approve tasks. Superadmins are always managers."},
 
     {path = "DefaultWorking", label = "New Staff Start As Working", group = "Presence", public = false},
     {path = "JoinPopupDelay", label = "Join Popup Delay (Seconds)", min = 1, max = 120, decimals = 0, group = "Presence", public = false},
@@ -16,8 +14,6 @@ local specs = {
         description = "Working staff with tasks due today or overdue are reminded this often. Changes need a restart."},
     {path = "ShowServerTime", label = "Show Server Time Under The Clock", group = "Presence"},
 
-    {path = "Priorities", label = "Priorities", list = true, group = "Tasks", maxLength = 20,
-        description = "From lowest to highest."},
     {path = "DefaultPriority", label = "Default Priority", group = "Tasks", maxLength = 20},
     {path = "TitleMax", label = "Title Maximum Length", min = 10, max = 200, decimals = 0, group = "Tasks", public = false},
     {path = "SummaryMax", label = "Summary Maximum Length", min = 20, max = 500, decimals = 0, group = "Tasks", public = false},
@@ -28,12 +24,8 @@ local specs = {
     {path = "HistoryMax", label = "History Entries Kept Per Task", min = 5, max = 200, decimals = 0, group = "Tasks", public = false},
 
     {path = "LinkMax", label = "Most Links Per Task", min = 1, max = 20, decimals = 0, group = "Tasks", public = false},
-    {path = "LogicStatuses", label = "Job Logic Statuses", list = true, group = "Job Logic", maxLength = 30,
-        description = "In order, from not started to finished. The first is the default for every job."},
-    {path = "JobTaskSteps", label = "Create-Task Starter Steps", list = true, group = "Job Logic", maxLength = 120, public = false,
-        description = "Become the instructions and checklist of a task created from a job."},
-    {path = "Palette", label = "Task Colours", list = true, group = "Tasks", maxLength = 40,
-        description = "Optional colours staff can give a task. Each entry looks like Red=#e5484d."},
+    {path = "TimeMinuteStep", label = "Time Picker Minute Step", min = 1, max = 30, decimals = 0, group = "Tasks", public = false,
+        description = "How many minutes each arrow click or scroll moves the time picker."},
     {path = "ScheduleMax", label = "Most Scheduled Days Per Task", min = 1, max = 120, decimals = 0, group = "Tasks", public = false},
     {path = "ConvertSetsPlanned", label = "Converting A Suggestion Marks It Planned", group = "Suggestions", public = false,
         description = "Needs the Suggestions module. Suggestions still waiting for approval are left alone."},
@@ -42,8 +34,6 @@ local specs = {
     {path = "JobDialogWidth", label = "Job Dialog Width", min = 300, max = 900, decimals = 0, group = "Window"},
     {path = "JobDialogHeight", label = "Job Dialog Height", min = 200, max = 700, decimals = 0, group = "Window"},
 
-    {path = "ChatCommands", label = "Chat Commands", list = true, group = "Commands", maxLength = 120,
-        description = "Typed in chat to open Workflow. Include the ! or / prefix."},
     {path = "ConsoleCommand", label = "Console Command", group = "Commands", maxLength = 30,
         description = "Lowercase, no spaces. Changes need a restart."},
 
@@ -87,4 +77,73 @@ DFW.Bind.Module({
     description = "Plan, assign and track server work with staff presence, notes and an archive.",
     dependencies = {"dubz_core"},
     launchers = launchers()
-}, config, specs, {ui = true})
+}, config, specs, {
+    ui = true,
+    collections = {
+        {
+            id = "chat_commands",
+            label = "Chat Commands",
+            description = "Typed in chat to open Workflow. Include the ! or / prefix.",
+            public = false,
+            columns = {listColumn("Command", 60)},
+            default = DFW.Collections.RowsFromList(DubzWorkflow.Lists.chat_commands, "value")
+        },
+        {
+            id = "staff_ranks",
+            label = "Staff Usergroups",
+            description = "Used when staff mode is ranks. Works with SAM, ULX and xAdmin usergroups.",
+            public = false,
+            columns = {listColumn("Usergroup", 40)},
+            default = {}
+        },
+        {
+            id = "staff_steamids",
+            label = "Extra Staff SteamID64s",
+            description = "Always counted as staff, whatever their usergroup.",
+            public = false,
+            columns = {listColumn("SteamID64", 24)},
+            default = {}
+        },
+        {
+            id = "manager_ranks",
+            label = "Manager Usergroups",
+            description = "Managers create, edit, assign and approve tasks. Superadmins are always managers.",
+            public = false,
+            columns = {listColumn("Usergroup", 40)},
+            default = {}
+        },
+        {
+            id = "priorities",
+            label = "Priorities",
+            description = "From lowest at the top to highest at the bottom.",
+            columns = {listColumn("Priority", 20)},
+            default = DFW.Collections.RowsFromList(DubzWorkflow.Lists.priorities, "value")
+        },
+        {
+            id = "palette",
+            label = "Task Colours",
+            description = "Optional colours staff can give a task. The colour is a hex code such as #e5484d.",
+            preview = {kind = "chip", text = "name", color = "hex"},
+            columns = {
+                {key = "name", label = "Name", type = "string", width = 1, maxLength = 20},
+                {key = "hex", label = "Hex Colour", type = "string", width = 1, maxLength = 7}
+            },
+            default = DubzWorkflow.PaletteDefault
+        },
+        {
+            id = "logic_statuses",
+            label = "Job Logic Statuses",
+            description = "In order, from not started to finished. The first is the default for every job.",
+            columns = {listColumn("Status", 30)},
+            default = DFW.Collections.RowsFromList(DubzWorkflow.Lists.logic_statuses, "value")
+        },
+        {
+            id = "job_task_steps",
+            label = "Create-Task Starter Steps",
+            description = "Become the instructions and checklist of a task created from a job.",
+            public = false,
+            columns = {listColumn("Step", 120)},
+            default = DFW.Collections.RowsFromList(DubzWorkflow.Lists.job_task_steps, "value")
+        }
+    }
+})

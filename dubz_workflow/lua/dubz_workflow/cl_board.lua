@@ -8,6 +8,13 @@ local HEADER_HEIGHT = 34
 local COLUMN_GAP = 10
 local COLUMNS = {"todo", "progress", "blocked", "review"}
 local hookCounter = 0
+local BAR_HEIGHT = 32
+local SORTS = {
+    {id = "priority", key = "SortPriority"},
+    {id = "newest", key = "SortNewest"},
+    {id = "due", key = "SortDue"}
+}
+local view = {sort = "priority", priority = ""}
 
 local function phrase(key, values)
     return DubzWorkflow.Phrase(key, values)
@@ -35,6 +42,15 @@ local function ordered(list, mode)
     table.sort(list, function(a, b)
         if mode == "done" then return (a.doneAt or 0) > (b.doneAt or 0) end
 
+        if view.sort == "newest" then return (a.createdAt or 0) > (b.createdAt or 0) end
+
+        if view.sort == "due" then
+            local first = a.due and a.due ~= "" and a.due or "9999-99-99"
+            local second = b.due and b.due ~= "" and b.due or "9999-99-99"
+
+            if first ~= second then return first < second end
+        end
+
         local left, right = Card.PriorityRank(a.priority), Card.PriorityRank(b.priority)
 
         if left ~= right then return left > right end
@@ -49,7 +65,7 @@ local function collect(predicate, mode)
     local list = {}
 
     for _, task in ipairs(State.Tasks) do
-        if predicate(task) then list[#list + 1] = task end
+        if predicate(task) and (view.priority == "" or task.priority == view.priority) then list[#list + 1] = task end
     end
 
     return ordered(list, mode)
@@ -115,16 +131,57 @@ local function buildColumns(root)
     end
 end
 
+local function buildToolbar(root, onChange)
+    local bar = vgui.Create("Panel", root)
+    local sort = vgui.Create("DFW.Dropdown", bar)
+    local filter = vgui.Create("DFW.Dropdown", bar)
+
+    bar:Dock(TOP)
+    bar:SetTall(BAR_HEIGHT)
+    bar:DockMargin(0, 0, 0, DFW.UI.Space("SM"))
+    filter:Dock(RIGHT)
+    filter:SetWide(190)
+    sort:Dock(RIGHT)
+    sort:SetWide(210)
+    sort:DockMargin(0, 0, 8, 0)
+
+    for _, entry in ipairs(SORTS) do sort:AddChoice(phrase(entry.key), entry.id) end
+
+    sort:SelectByData(view.sort, true)
+    sort.OnSelect = function()
+        local _, data = sort:GetSelected()
+
+        view.sort = data or "priority"
+        onChange()
+    end
+
+    filter:AddChoice(phrase("FilterAll"), "")
+
+    for _, entry in ipairs(DubzWorkflow.List("priorities")) do filter:AddChoice(entry, entry) end
+
+    filter:SelectByData(view.priority, true)
+    filter.OnSelect = function()
+        local _, data = filter:GetSelected()
+
+        view.priority = data or ""
+        onChange()
+    end
+end
+
 function Board.Build(parent, mode)
     local root = vgui.Create("Panel", parent)
     local refresh
+    local area
 
     root:Dock(FILL)
+    buildToolbar(root, function() refresh() end)
+    area = vgui.Create("Panel", root)
+    area:Dock(FILL)
 
     if mode == "board" then
-        refresh = buildColumns(root)
+        refresh = buildColumns(area)
     else
-        local scroll = vgui.Create("DFW.ScrollPanel", root)
+        local scroll = vgui.Create("DFW.ScrollPanel", area)
 
         scroll:Dock(FILL)
         refresh = function() fill(scroll, collect(FILTERS[mode] or FILTERS.mine, mode)) end
