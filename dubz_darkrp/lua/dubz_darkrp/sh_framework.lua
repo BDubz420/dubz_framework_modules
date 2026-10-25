@@ -19,8 +19,6 @@ local specs = {
 
     {path = "EditorCommand", label = "Board Console Command", group = "Board", maxLength = 30,
         description = "Lowercase, no spaces. Add a kind to open it directly: jobs, shipments, entities or ammo. Changes need a restart."},
-    {path = "ChatCommands", label = "Board Chat Commands", list = true, group = "Board", maxLength = 120,
-        description = "Typed in chat to open the board. Include the ! or / prefix."},
     {path = "BoardWidth", label = "Board Width", min = 900, max = 2400, decimals = 0, group = "Board"},
     {path = "BoardHeight", label = "Board Height", min = 500, max = 1400, decimals = 0, group = "Board"},
     {path = "ColumnWidth", label = "Column Width", min = 200, max = 500, decimals = 0, group = "Board"},
@@ -65,4 +63,26 @@ DFW.Bind.Module({
     description = "Kanban boards for jobs, shipments, entities and ammo. Changes reach every player immediately.",
     dependencies = {"dubz_core"},
     launchers = launchers()
-}, config, specs, {ui = true})
+}, config, specs, {
+    ui = true,
+    collections = {
+        {
+            id = "chat_commands",
+            label = "Board Chat Commands",
+            description = "Typed in chat to open the board. Include the ! or / prefix.",
+            public = false,
+            columns = {{key = "value", label = "Command", type = "string", width = 1, maxLength = 60}},
+            default = DFW.Collections.RowsFromList(DubzDarkRP.Lists.chat_commands, "value")
+        },
+        {
+            id = "ammo_models",
+            label = "Ammo Model Presets",
+            description = "Models offered in the ammo board's model picker. Players can still type any model path.",
+            columns = {
+                {key = "name", label = "Name", type = "string", width = 1, maxLength = 40},
+                {key = "model", label = "Model", type = "string", width = 2, maxLength = 120}
+            },
+            default = DubzDarkRP.AmmoModelDefaults
+        }
+    }
+})

@@ -54,6 +54,10 @@ local function barButton(bar, text, variant, onClick)
     return button
 end
 
+Pickers.OpenModal = openModal
+Pickers.BottomBar = bottomBar
+Pickers.BarButton = barButton
+
 local function allModels()
     local list = {}
 

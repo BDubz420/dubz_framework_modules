@@ -17,6 +17,12 @@ local DRAFT_ID = "__draft"
 local REMOVED_TOGGLE_WIDTH = 170
 
 local state = {Frame = nil, Kind = "jobs", Filter = "", Extra = {}, Slots = {}, Closing = false, ShowRemoved = false}
+local PAGE_ORDER = {"defaults", "settings"}
+local PAGE_ICONS = {defaults = "misc/label", settings = "misc/handyman"}
+local PAGE_LABELS = {defaults = "TabDefaults", settings = "TabSettings"}
+local DEFAULTS_BOX_WIDTH = 210
+
+DubzDarkRP.Pages = DubzDarkRP.Pages or {}
 
 local function send(action, kind, id, data)
     DFW.Net.Start("drp_edit")
@@ -179,8 +185,32 @@ local function groupedRows()
     return groups, order
 end
 
+local function refreshDefaults()
+    local box = state.DefaultsBox
+    local engine = Kinds.Engine(state.Kind)
+
+    if not (IsValid(box) and engine) then return end
+
+    local count = 0
+
+    box:Clear()
+    box:AddChoice(DubzDarkRP.Phrase("AddDefault"), "")
+
+    for _, row in ipairs(engine.List()) do
+        if row.status == "removed" and engine.Original(row.id) then
+            count = count + 1
+            box:AddChoice(row.entry.name or row.id, row.id)
+        end
+    end
+
+    box:SelectByData("", true)
+    box:SetEnabled(count > 0)
+end
+
 rebuild = function()
     if not (IsValid(state.Frame) and IsValid(state.Scroller)) then return end
+
+    refreshDefaults()
 
     state.Scroller:Clear()
 
@@ -228,7 +258,44 @@ local function buildSlot(kind)
     current.Form.Load(nil, Fields.DefaultsOf(kind))
 end
 
+local function leavePage()
+    if not state.PageId then return end
+
+    state.PageId = nil
+
+    if IsValid(state.Page) then state.Page:Remove() end
+
+    state.Toolbar:SetTall(TOOLBAR_HEIGHT)
+    state.Toolbar:DockMargin(0, DFW.UI.Space("SM"), 0, DFW.UI.Space("SM"))
+    state.Toolbar:SetVisible(true)
+    state.Area:Dock(FILL)
+    state.Area:SetVisible(true)
+end
+
+local function showPage(id)
+    leavePage()
+    state.PageId = id
+    state.Toolbar:SetVisible(false)
+    state.Toolbar:SetTall(0)
+    state.Toolbar:DockMargin(0, 0, 0, 0)
+    state.Area:SetVisible(false)
+    state.Area:Dock(NODOCK)
+    state.Drawer:SetVisible(false)
+
+    if IsValid(state.Indicator) then state.Indicator:SetVisible(false) end
+
+    state.Page = DubzDarkRP.Pages[id].Build(state.Content)
+    state.Page:Dock(FILL)
+    state.Content:InvalidateLayout(true)
+end
+
 local function switchKind(kind)
+    if DubzDarkRP.Pages[kind] then
+        showPage(kind)
+        return
+    end
+
+    leavePage()
     state.Kind = kind
 
     if not state.Slots[kind] then buildSlot(kind) end
@@ -257,6 +324,8 @@ local function buildTabs(content)
 
     for _, kind in ipairs(Kinds.Order) do tabs:AddTab(kind, kindName(kind), Kinds.Meta[kind].icon) end
 
+    for _, id in ipairs(PAGE_ORDER) do tabs:AddTab(id, DubzDarkRP.Phrase(PAGE_LABELS[id]), PAGE_ICONS[id]) end
+
     return tabs
 end
 
@@ -277,6 +346,7 @@ local function buildToolbar(content)
     local category = vgui.Create("DFW.Button", bar)
     local new = vgui.Create("DFW.Button", bar)
     local removed = vgui.Create("DFW.Toggle", bar)
+    local defaults = vgui.Create("DFW.Dropdown", bar)
     local search = vgui.Create("DFW.TextEntry", bar)
 
     bar:Dock(TOP)
@@ -305,6 +375,18 @@ local function buildToolbar(content)
     removed.OnChange = function(_, value)
         state.ShowRemoved = value == true
         rebuild()
+    end
+
+    state.DefaultsBox = defaults
+    defaults:Dock(RIGHT)
+    defaults:SetWide(DEFAULTS_BOX_WIDTH)
+    defaults:DockMargin(DFW.UI.Space("SM"), 0, 0, 0)
+    defaults.OnSelect = function()
+        local _, id = defaults:GetSelected()
+
+        if id and id ~= "" then send("restore", state.Kind, id) end
+
+        defaults:SelectByData("", true)
     end
 
     search:Dock(FILL)
@@ -425,12 +507,12 @@ function DubzDarkRP.OpenBoard(kind, focusId)
     state.Drawer:SetVisible(false)
     content.PerformLayout = function(self) placeDrawer(self) end
 
-    kind = Kinds.Meta[kind or ""] and kind or "jobs"
+    kind = (Kinds.Meta[kind or ""] or DubzDarkRP.Pages[kind or ""]) and kind or "jobs"
     tabs:SetActive(kind, true)
     switchKind(kind)
     content:InvalidateLayout(true)
 
-    local entry = focusId and Kinds.Engine(kind).Get(focusId)
+    local entry = focusId and Kinds.Engine(kind) and Kinds.Engine(kind).Get(focusId)
 
     if entry then choose({id = focusId, entry = entry}) end
 

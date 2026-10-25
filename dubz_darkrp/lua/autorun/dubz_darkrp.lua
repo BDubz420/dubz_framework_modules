@@ -4,6 +4,7 @@ local ROOT = "dubz_darkrp/"
 local LOCAL_FILES = {"sh_config.lua", "sh_diagnostics.lua"}
 local PACKAGE_FILES = {
     "sh_net.lua",
+    "sh_settings_info.lua",
     "sh_fields.lua",
     "sh_kinds.lua",
     "sh_framework.lua",
@@ -18,6 +19,10 @@ local PACKAGE_FILES = {
     "cl_tags.lua",
     "cl_pickers.lua",
     "cl_form.lua",
+    "cl_weapons.lua",
+    "cl_props.lua",
+    "cl_defaults.lua",
+    "cl_settings.lua",
     "cl_board_card.lua",
     "cl_board_column.lua",
     "cl_board_scrollbar.lua",
@@ -30,6 +35,7 @@ local SERVER_FILES = {
     "sv_edit.lua",
     "sv_sync.lua",
     "sv_requests.lua",
+    "sv_settings.lua",
     "sv_boot.lua",
     "sv_commands.lua"
 }

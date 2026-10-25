@@ -107,7 +107,7 @@ end)
 hook.Add("PlayerSay", "DubzDarkRP_Chat", function(ply, text)
     local typed = string.lower(string.Trim(text))
 
-    for _, command in ipairs(config.ChatCommands) do
+    for _, command in ipairs(DubzDarkRP.List("chat_commands")) do
         if typed == string.lower(command) then
             if DubzDarkRP.CanManage(ply) then
                 DubzDarkRP.Sync.Open(ply, "jobs")

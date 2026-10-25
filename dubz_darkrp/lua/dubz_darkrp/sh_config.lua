@@ -9,7 +9,6 @@ DubzDarkRP.Config = {
     VoteSeconds = 20,
 
     EditorCommand = "dubz_drp",
-    ChatCommands = {"!drp", "/drp"},
     BoardWidth = 1500,
     BoardHeight = 860,
     ColumnWidth = 280,
@@ -40,6 +39,37 @@ DubzDarkRP.Config = {
         ShopDead = "You must be alive to buy {item}.",
         ShopFailed = "{item} could not be created.",
         ShopNotAllowed = "You are not allowed to buy {item}.",
+        TabDefaults = "Disabled Defaults",
+        TabSettings = "Settings",
+        AddDefault = "Add a default...",
+        DefaultsHint = "Turn a default off to remove it from the server, or on to bring it back. Defaults you turn off stay off, so you can redefine them on their own board.",
+        DefaultsSearch = "Search defaults",
+        DefaultsEmpty = "No defaults match.",
+        DefaultsGroup = "{kind} defaults",
+        SettingsHint = "Changes apply right away and are remembered. A few settings only take effect after a map change.",
+        SettingsSearch = "Search settings",
+        SettingsEmpty = "No settings match.",
+        SettingsReset = "Reset",
+        SettingsDefault = "Default: {value}",
+        SettingSaved = "Setting saved.",
+        SettingWasReset = "Setting reset to its default.",
+        SettingUnknown = "That setting does not exist.",
+        SettingInvalid = "That value is not valid for this setting.",
+        SettingGeneral = "General setting",
+        PickerWeapons = "Browse weapons",
+        WeaponsTitle = "Weapon browser",
+        WeaponsSearch = "Search weapons",
+        WeaponsOther = "Other",
+        WeaponsCount = "{count} weapons",
+        PickerProps = "Browse props",
+        PropsTitle = "Prop browser",
+        PropsSearch = "Search props",
+        PropsEmpty = "No props found.",
+        PickerAmmoModels = "Pick model",
+        AmmoModelsTitle = "Ammo model",
+        AmmoModelCustom = "Custom model path",
+        UseModel = "Use model",
+        ModelCount = "{count} models",
         KindJobs = "Jobs",
         KindShipments = "Shipments",
         KindEntities = "Entities",
@@ -153,6 +183,37 @@ function DubzDarkRP.Phrase(key, values)
     end
 
     return text
+end
+
+DubzDarkRP.Lists = {chat_commands = {"!drp", "/drp"}}
+
+function DubzDarkRP.List(id)
+    local module = DFW and DFW.Collections
+
+    if module and module.GetDefinition("drp_core", id) then
+        return module.ListFromRows(module.Get("drp_core", id), "value")
+    end
+
+    return table.Copy(DubzDarkRP.Lists[id] or {})
+end
+
+DubzDarkRP.AmmoModelDefaults = {
+    {name = "Small pistol box", model = "models/items/boxsrounds.mdl"},
+    {name = "Medium rifle box", model = "models/items/boxmrounds.mdl"},
+    {name = ".357 box", model = "models/items/357ammo.mdl"},
+    {name = "Shotgun shells", model = "models/items/boxbuckshot.mdl"},
+    {name = "Combine rifle cartridge", model = "models/items/combine_rifle_cartridge01.mdl"},
+    {name = "Crossbow bolts", model = "models/items/crossbowrounds.mdl"}
+}
+
+function DubzDarkRP.AmmoModels()
+    local module = DFW and DFW.Collections
+
+    if module and module.GetDefinition("drp_core", "ammo_models") then
+        return module.Get("drp_core", "ammo_models")
+    end
+
+    return DubzDarkRP.AmmoModelDefaults
 end
 
 function DubzDarkRP.Enabled()

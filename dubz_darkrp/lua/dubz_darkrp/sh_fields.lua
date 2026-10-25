@@ -218,7 +218,7 @@ Fields.Define("jobs", {
     {key = "candemote", type = "bool"},
     {key = "color", type = "color"},
     {key = "model", type = "list", required = true, collapse = true, picker = "playermodels"},
-    {key = "weapons", type = "list"}
+    {key = "weapons", type = "list", picker = "weapons"}
 }, {
     name = "New Job", command = "", category = "Citizens", description = "", salary = 45, max = 0, admin = 0,
     vote = false, hasLicense = false, candemote = true, color = {r = 120, g = 120, b = 120, a = 255},
@@ -227,7 +227,7 @@ Fields.Define("jobs", {
 
 Fields.Define("shipments", {
     text("name", 40, true),
-    text("entity", 60, true),
+    {key = "entity", type = "string", max = 60, required = true, picker = "weapon"},
     text("model", 120, true),
     text("category", 40, true),
     money("price"),
@@ -245,7 +245,7 @@ Fields.Define("entities", {
     text("name", 40, true),
     text("ent", 60, true),
     {key = "cmd", type = "command", max = 30, required = true},
-    text("model", 120, true),
+    {key = "model", type = "string", max = 120, required = true, picker = "props"},
     text("category", 40, true),
     money("price"),
     {key = "max", type = "number", min = 0, max = 100, decimals = 0},
@@ -258,7 +258,7 @@ Fields.Define("entities", {
 Fields.Define("ammo", {
     text("name", 40, true),
     text("ammoType", 30, true),
-    text("model", 120, true),
+    {key = "model", type = "string", max = 120, required = true, picker = "ammomodels"},
     text("category", 40, true),
     money("price"),
     {key = "amountGiven", type = "number", min = 1, max = 1000, decimals = 0}

@@ -139,6 +139,10 @@ function Edit.Restore(actor, kind, id)
     if not entry then return failure("NotFound", {id = tostring(id)}) end
     if not engine.Original(id) then return Edit.Remove(actor, kind, id) end
 
+    local owner = uniqueOwner(kind, id, engine.Original(id))
+
+    if owner then return failure("ReasonDuplicate", {job = owner}) end
+
     local before = Fields.Extract(entry, kind)
 
     engine.Restore(id)

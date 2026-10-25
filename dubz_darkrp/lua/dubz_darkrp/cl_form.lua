@@ -99,25 +99,61 @@ local function colorControl(holder, changed)
     }
 end
 
+local LIST_PICKERS = {
+    jobs = {label = "PickerJobs", icon = "darkrp/work", open = function(items, apply) Pickers.Jobs(items, apply) end},
+    playermodels = {label = "PickerModels", icon = "players/person", open = function(items, apply) Pickers.Models(items, apply) end},
+    weapons = {label = "PickerWeapons", icon = "darkrp/local_police", open = function(items, apply) Pickers.Weapons(items, apply) end}
+}
+
+local TEXT_PICKERS = {
+    weapon = {label = "PickerWeapons", icon = "darkrp/local_police", open = function(value, apply) Pickers.Weapon(value, apply) end},
+    props = {label = "PickerProps", icon = "economy/inventory_2", open = function(value, apply) Pickers.Props(value, apply) end},
+    ammomodels = {label = "PickerAmmoModels", icon = "economy/inventory_2", open = function(value, apply) Pickers.AmmoModels(value, apply) end}
+}
+
+local function pickerTextControl(holder, definition, changed)
+    local bar = vgui.Create("Panel", holder)
+    local button = vgui.Create("DFW.Button", bar)
+    local entry = vgui.Create("DFW.TextEntry", bar)
+
+    bar:Dock(TOP)
+    bar:SetTall(32)
+    button:Dock(RIGHT)
+    button:SetWide(PICKER_WIDTH)
+    button:DockMargin(DFW.UI.Space("SM"), 0, 0, 0)
+    button:SetLabel(DubzDarkRP.Phrase(definition.label))
+    button:SetIcon(definition.icon)
+    entry:Dock(FILL)
+    entry.OnChange = function() changed() end
+    button.DoClick = function()
+        definition.open(entry:GetValue(), function(value)
+            entry:SetValue(value)
+            changed()
+        end)
+    end
+
+    return {
+        Read = function() return entry:GetValue() end,
+        Write = function(value) entry:SetValue(tostring(value)) end,
+        Lock = function(locked)
+            entry:SetEnabled(not locked)
+            button:SetEnabled(not locked)
+        end
+    }
+end
+
 local function addPicker(holder, tags, spec, changed)
     local button = vgui.Create("DFW.Button", holder)
-    local isJobs = spec.picker == "jobs"
+    local definition = LIST_PICKERS[spec.picker]
 
     button:SetSize(PICKER_WIDTH, PICKER_HEIGHT)
-    button:SetLabel(DubzDarkRP.Phrase(isJobs and "PickerJobs" or "PickerModels"))
-    button:SetIcon(isJobs and "darkrp/work" or "players/person")
+    button:SetLabel(DubzDarkRP.Phrase(definition.label))
+    button:SetIcon(definition.icon)
     button.DoClick = function()
-        if isJobs then
-            Pickers.Jobs(tags:GetItems(), function(ids)
-                tags:SetItems(ids)
-                changed()
-            end)
-        else
-            Pickers.Models(tags:GetItems(), function(paths)
-                tags:SetItems(paths)
-                changed()
-            end)
-        end
+        definition.open(tags:GetItems(), function(items)
+            tags:SetItems(items)
+            changed()
+        end)
     end
 
     holder.PerformLayout = function(_, w) button:SetPos(w - PICKER_WIDTH, (PICKER_ROW - PICKER_HEIGHT) / 2) end
@@ -162,6 +198,8 @@ local function fieldControl(parent, kind, spec, changed)
     if spec.type == "number" then return numberControl(holder, spec, changed) end
     if spec.type == "color" then return colorControl(holder, changed) end
     if spec.type == "list" or spec.type == "jobs" then return listControl(holder, spec, changed) end
+
+    if spec.type == "string" and TEXT_PICKERS[spec.picker] then return pickerTextControl(holder, TEXT_PICKERS[spec.picker], changed) end
 
     return textControl(holder, changed)
 end
