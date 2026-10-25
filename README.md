@@ -14,7 +14,7 @@ Every module is its own addon. Take the ones you want, leave the rest. Everythin
 
 ## Requirements
 
-- A Garry's Mod server running **DarkRP**
+- Some modules require a Garry's Mod server running **DarkRP**
 - The **[Dubz Framework](https://github.com/BDubz420/dubz_framework)**, installed first
 
 ## Install
