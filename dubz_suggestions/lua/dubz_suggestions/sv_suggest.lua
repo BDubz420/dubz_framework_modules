@@ -19,7 +19,7 @@ end
 local function filtered(title, body)
     local text = string.lower(title .. " " .. body)
 
-    for _, word in ipairs(config.WordFilter) do
+    for _, word in ipairs(DubzSuggestions.List("word_filter", true)) do
         if word ~= "" and string.find(text, word, 1, true) then return true end
     end
 

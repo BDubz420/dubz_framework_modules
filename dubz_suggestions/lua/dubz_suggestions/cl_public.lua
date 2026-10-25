@@ -213,6 +213,7 @@ function Public.Build(parent)
 
     card:Dock(RIGHT)
     card:SetWide(config.PublicWidth)
+    card:DockMargin(DFW.UI.Space("MD"), 0, 0, 0)
 
     local pad = vgui.Create("Panel", card)
 

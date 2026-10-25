@@ -1,5 +1,4 @@
 DubzSuggestions.Config = {
-    ChatCommands = {"!suggestion", "/suggestion", "!suggest", "/suggest"},
     ConsoleCommand = "dubz_suggest",
     AdminCommand = "dubz_suggestions_admin",
 
@@ -9,7 +8,6 @@ DubzSuggestions.Config = {
     AllowOwnVote = false,
     AllowCustomTopic = true,
     PingMode = "all",
-    WordFilter = {},
 
     TitleMin = 4,
     TitleMax = 80,
@@ -99,6 +97,25 @@ function DubzSuggestions.Phrase(key, values)
     end
 
     return text
+end
+
+DubzSuggestions.Lists = {
+    chat_commands = {"!suggestion", "/suggestion", "!suggest", "/suggest"},
+    word_filter = {}
+}
+
+function DubzSuggestions.List(id, lower)
+    local module = DFW and DFW.Collections
+
+    if module and module.GetDefinition("suggestions", id) then
+        return module.ListFromRows(module.Get("suggestions", id), "value", lower)
+    end
+
+    local list = {}
+
+    for _, value in ipairs(DubzSuggestions.Lists[id] or {}) do list[#list + 1] = lower and string.lower(value) or value end
+
+    return list
 end
 
 function DubzSuggestions.Enabled()
