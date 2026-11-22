@@ -1,5 +1,9 @@
 # Dubz Framework Modules
 
+**Pair this with free server analytics & tools:**  
+Every module registers straight into the in-game **`!dubzconfig`** menu—so you can edit tables, bools, and settings live without touching files. If you also want clean server analytics and a bunch of free DarkRP/server-building tools, connect your server to **[Lowkey Networks](https://lowkeynetworks.com)** using our free adapter (works with any host, or launch there with 1-click install).
+
+
 A library of 37 ready-made modules for Garry's Mod DarkRP servers, built on the [Dubz Framework](https://github.com/BDubz420/dubz_framework). Characters, skills, inventory, jobs, shops, mining, cooking, a HUD, an F4 menu, a scoreboard, staff tools and more. They were written for and run on **Liminal RP**, and are released here for free so any server can use them.
 
 Every module is its own addon. Take the ones you want, leave the rest. Everything is configurable in game from one admin menu, with no file editing.
